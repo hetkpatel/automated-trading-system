@@ -1,48 +1,31 @@
 import yahoofinance.*;
 import java.io.*;
-import java.math.BigDecimal;
 import java.util.*;
 
 public class Main {
-
-	// Enter stock tickers to keep track of here
-//	static String[] symbols = new String[] {"TMUS"};
-//	static Map<String, StockData> stocks = new HashMap<String, StockData>();
-	static String symbol = "TMUS";
-	static StockData stock;
 	
-//	static ArrayList<BigDecimal> lastPrice = new ArrayList<BigDecimal>();
-	static BigDecimal lastPrice;
+	// Enter stock tickers to keep track of here
+	static String[] symbols = new String[] {"TMUS", "TSLA", "S"};
+	static Map<String, StockData> stocks = new HashMap<String, StockData>();
 	
 	public static void main(String[] args) throws IOException {
-//		for (int i = 0;i < symbols.length;i++)
-//			stocks.put(symbols[i], new StockData(YahooFinance.get(symbols[i])));
-		stock = new StockData(YahooFinance.get(symbol));
+		for (int i = 0;i < symbols.length;i++)
+			stocks.put(symbols[i], new StockData(YahooFinance.get(symbols[i])));
 		
-		System.out.println("Count\tPrice\tChange\tGain\tLoss\tAvg Gain\tAvg Loss\tRS\tRSI");
+		System.out.println("Note: RSI values will show after 3.5 min");
+		System.out.println("Watchlist: " + Arrays.toString(symbols));
+		System.out.println("Ticker\tRSI");
 		
 		Thread thread = new Thread(new Runnable() {
 			public void run() {
 				int counter = 0;
 				while (true) {
 					try {
-						if (lastPrice == null) {
-							lastPrice = stock.price();
-							System.out.println(counter + "\t" + lastPrice + "\t");
-						} else {
-							BigDecimal price = stock.price();
-							BigDecimal change = price.subtract(lastPrice);
-							if (change.compareTo(new BigDecimal(0)) == 1) {
-								stock.appendGain(change);
-								System.out.print(counter + "\t" + price + "\t" + change + "\t" + change + "\t\t");
-							} else if (change.compareTo(new BigDecimal(0)) == -1) {
-								stock.appendLoss(change.abs());
-								System.out.print(counter + "\t" + price + "\t" + change + "\t\t" + change.abs() + "\t");
-							}
-							lastPrice = price;
-							if (counter >= 14) {
-								System.out.print(stock.avgGain() + "\t" + stock.avgLoss() + "\t" + stock.rs() + "\t" + stock.rsi());
-							}
+						for (String ticker : symbols)
+							stocks.get(ticker).tick(counter);
+						if (counter >= 14) {
+							for (String ticker : symbols)
+								System.out.println(ticker + "\t" + stocks.get(ticker).rsi());
 							System.out.println();
 						}
 						counter++;
